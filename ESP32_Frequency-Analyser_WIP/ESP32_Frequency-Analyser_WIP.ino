@@ -55,7 +55,6 @@ int Bucketentries[LED_COUNT];
 double middleFrequencys[LED_COUNT];
 float Maximum[LED_COUNT];
 
-* /
 float BucketAmplitude[LED_COUNT];
 float BucketNoise[64] = {284.43 , 714.73 , 667.95 , 579.42 , 451.34 , 416.01 , 268.92 , 228.56 , 200.94 , 168.76 , 133.52 , 128.60 , 132.47 , 176.75 , 157.20 , 177.93 , 124.83 , 102.09 , 111.68 , 94.17 ,
                          69.79 , 87.22 , 118.06 , 106.82 , 83.47 , 78.88 , 63.66 , 76.13 , 71.21 , 65.49 , 47.32 , 51.52 , 52.82 , 47.39 , 50.41 , 46.77 , 50.18 , 46.98 , 45.22 , 61.64 , 59.21 , 41.16 ,
@@ -81,7 +80,7 @@ void setup()
   FastLED.setBrightness(255);
 
   Serial.begin(115200);
-  while (!Serial);
+  //while (!Serial);
   Serial.println("Ready");
 
 
@@ -330,24 +329,24 @@ void startbuckets() {
 
   }
 
-}
 
-for ( int i = 0; i < LED_COUNT - 1 ; i++) {
-  if (Buckets[i] < Buckets[i + 1]) {
-    Buckets[i] = (Buckets[i] + Buckets[i + 1]) / 2;
-  }
-}
-for ( int i = LED_COUNT; i > 0 ; i--) {
-  if (Buckets[i] < Buckets[i - 1]) {
-    Buckets[i] = (Buckets[i] + Buckets[i - 1]) / 2;
-  }
-}
 
-for ( int i = 0; i < LED_COUNT; i++) {
-  if (Buckets[i] < BucketsOld[i]) {
-    Buckets[i] = (Buckets[i] + 2 * BucketsOld[i]) / 3;
+  for ( int i = 0; i < LED_COUNT - 1 ; i++) {
+    if (Buckets[i] < Buckets[i + 1]) {
+      Buckets[i] = (Buckets[i] + Buckets[i + 1]) / 2;
+    }
   }
-}
+  for ( int i = LED_COUNT; i > 0 ; i--) {
+    if (Buckets[i] < Buckets[i - 1]) {
+      Buckets[i] = (Buckets[i] + Buckets[i - 1]) / 2;
+    }
+  }
+
+  for ( int i = 0; i < LED_COUNT; i++) {
+    if (Buckets[i] < BucketsOld[i]) {
+      Buckets[i] = (Buckets[i] + 2 * BucketsOld[i]) / 3;
+    }
+  }
 }
 
 
