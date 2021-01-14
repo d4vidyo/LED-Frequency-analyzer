@@ -2,6 +2,10 @@
 Analyzing live analog audio stream using Esp32 and Arduino IDE
 
 
+<script>
+  md_gallery();
+</script>
+
 * ![Image 1](https://github.com/d4vidyo/LED-Frequency-analyzer/blob/main/Files/WIP/Pictures/Breadboard/Breadboard%20View%20Top.jpg)
 * ![Image 2](https://github.com/d4vidyo/LED-Frequency-analyzer/blob/main/Files/WIP/Pictures/Breadboard/Breadboard%20View%20amp.jpg)
 * ![Image 3](https://github.com/d4vidyo/LED-Frequency-analyzer/blob/main/Files/WIP/Pictures/Breadboard/Breadboard%20View%20close.jpg)
