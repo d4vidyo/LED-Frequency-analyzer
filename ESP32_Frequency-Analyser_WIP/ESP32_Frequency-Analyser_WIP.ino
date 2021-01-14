@@ -55,26 +55,7 @@ int Bucketentries[LED_COUNT];
 double middleFrequencys[LED_COUNT];
 float Maximum[LED_COUNT];
 
-/*OLD
-  float BucketAmplitude[64]={396.16, 834.62, 859.69, 714.80, 857.92, 712.57, 535.65, 711.94, 538.18, 538.56, 537.72, 538.66, 409.39, 410.74, 407.79, 409.39, 335.76, 337.05, 336.31, 335.80, 341.94,
-                          294.75, 291.30, 305.22, 293.71, 254.86, 252.62, 257.29, 254.26, 234.62, 245.58, 234.68, 247.55, 241.24, 228.47, 239.32, 226.76, 223.12, 204.49, 200.59, 223.26, 207.82,
-                          190.25, 197.32, 205.85, 206.74, 204.74, 202.58, 188.04, 192.82, 196.43, 187.38, 185.68, 188.67, 188.73, 182.76, 186.18, 178.90, 165.88, 193.28, 169.95, 171.03, 174.24, 296.27};
-*/
-
-/*NEW
-  float BucketAmplitude[64] = {5930.33, 5061.44, 4989.55, 4642.48, 8106.07, 4803.11, 7438.56, 7596.22, 7637.06, 8922.90, 7635.20, 7545.49, 7855.98, 7265.73, 7284.55, 7954.88, 6967.67, 6533.06, 7974.01,
-                             5721.41, 6453.77, 5743.20, 4836.87, 8339.20, 4494.45, 3823.16, 4599.52, 3524.77, 3769.01, 4222.47, 4285.72, 4053.66, 3550.06, 3040.68, 3758.38, 3141.70, 2819.16, 2852.95,
-                             3038.94, 3947.54, 3230.10, 4091.78, 3094.80, 3449.45, 3393.59, 3265.20, 3201.85, 3384.65, 3417.98, 3471.47, 6339.01, 4113.68, 3864.07, 3930.64, 3272.28, 3877.16, 2743.09,
-                             2515.11, 2977.76, 3223.32, 2627.26, 2246.24, 2284.94, 13031.66
-                            };
-*/
-/*newNEW
-  float BucketAmplitude[64] = {2680.41 , 5008.45 , 4789.11 , 4886.26 , 3795.05 , 4597.22 , 2776.01 , 2206.32 , 3054.51 , 2273.63 , 2607.14 , 1564.74 , 1640.56 , 1651.03 , 1633.64 , 1559.06 , 1753.13 ,
-                             978.00 , 1158.34 , 968.60 , 1003.18 , 884.80 , 959.95 , 671.71 , 574.51 , 644.45 , 600.37 , 556.89 , 610.58 , 493.05 , 449.41 , 370.95 , 385.97 , 402.52 , 349.62 , 362.97 ,
-                             356.00 , 382.16 , 393.37 , 599.63 , 372.89 , 316.09 , 281.45 , 329.60 , 310.77 , 465.84 , 299.97 , 329.69 , 253.80 , 254.03 , 246.33 , 389.25 , 259.90 , 416.82 , 186.85 , 195.33 ,
-                             220.25 , 206.21 , 173.88 , 171.93 , 156.62 , 154.70 , 137.08 , 98.17
-                            };
-*/
+* /
 float BucketAmplitude[LED_COUNT];
 float BucketNoise[64] = {284.43 , 714.73 , 667.95 , 579.42 , 451.34 , 416.01 , 268.92 , 228.56 , 200.94 , 168.76 , 133.52 , 128.60 , 132.47 , 176.75 , 157.20 , 177.93 , 124.83 , 102.09 , 111.68 , 94.17 ,
                          69.79 , 87.22 , 118.06 , 106.82 , 83.47 , 78.88 , 63.66 , 76.13 , 71.21 , 65.49 , 47.32 , 51.52 , 52.82 , 47.39 , 50.41 , 46.77 , 50.18 , 46.98 , 45.22 , 61.64 , 59.21 , 41.16 ,
@@ -114,10 +95,7 @@ void setup()
       int difference = (4900 / log(64)) * (log(i + 1) - log(i));
       BucketAmplitude[i] =  BucketAmplitude[i - 1] - difference;
     }
-    Serial.print(BucketAmplitude[i]);
-    Serial.print(" , ");
   }
-  Serial.println(" ");
 
 
 
@@ -341,47 +319,35 @@ void startbuckets() {
 
 
 
-  //Serial.println(" ");
   //normalising Buckets
   for (int i = 0; i < LED_COUNT; i++) {
-    //Buckets[i] = Buckets[i] * 100 / Bucketentries[i];
+
     Buckets[i] = Buckets[i] / Bucketentries[i];
-
-    if (Buckets[i] < BucketNoise[i] * 1.1) {
-      Buckets[i] = 0;
-    }
-    if (BucketsPeak[i] < Buckets[i]) {
-      BucketsPeak[i] = Buckets[i];
-    }
     Buckets[i] = 100 * Buckets[i] / BucketAmplitude[i];
-    //Serial.print(Buckets[i]);
-    //Serial.print(" , ");
-    if (Buckets[i] > 10) {
-      //Buckets[i]=100 * (log10(Buckets[i])-1);
-      if (Buckets[i] > 100) {
-        Buckets[i] = 100;
-      }
-      //Buckets[i] = exp(4.6 * (Buckets[i] / 100));
+    if (Buckets[i] > 100) {
+      Buckets[i] = 100;
     }
 
   }
 
-  for ( int i = 0; i < LED_COUNT - 1 ; i++) {
-    if (Buckets[i] < Buckets[i + 1]) {
-      Buckets[i] = (Buckets[i] + Buckets[i + 1]) / 2;
-    }
-  }
-  for ( int i = LED_COUNT; i > 0 ; i--) {
-    if (Buckets[i] < Buckets[i - 1]) {
-      Buckets[i] = (Buckets[i] + Buckets[i - 1]) / 2;
-    }
-  }
+}
 
-  for ( int i = 0; i < LED_COUNT; i++) {
-    if (Buckets[i] < BucketsOld[i]) {
-      Buckets[i] = (Buckets[i] + 2 * BucketsOld[i]) / 3;
-    }
+for ( int i = 0; i < LED_COUNT - 1 ; i++) {
+  if (Buckets[i] < Buckets[i + 1]) {
+    Buckets[i] = (Buckets[i] + Buckets[i + 1]) / 2;
   }
+}
+for ( int i = LED_COUNT; i > 0 ; i--) {
+  if (Buckets[i] < Buckets[i - 1]) {
+    Buckets[i] = (Buckets[i] + Buckets[i - 1]) / 2;
+  }
+}
+
+for ( int i = 0; i < LED_COUNT; i++) {
+  if (Buckets[i] < BucketsOld[i]) {
+    Buckets[i] = (Buckets[i] + 2 * BucketsOld[i]) / 3;
+  }
+}
 }
 
 
