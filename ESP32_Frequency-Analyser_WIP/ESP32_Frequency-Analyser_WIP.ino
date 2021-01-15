@@ -29,10 +29,6 @@ volatile double vRealBuffer[samples];
 volatile double vFFT[samples];
 double Imag[samples];
 
-#define SCL_INDEX 0x00
-#define SCL_TIME 0x01
-#define SCL_FREQUENCY 0x02
-#define SCL_PLOT 0x03
 #define Audio 34
 #define fps 30
 
@@ -52,8 +48,6 @@ float R = 0, G = 0, B = 0;
 int smallestPosition[samples / 2];
 int freque[LED_COUNT];
 int Bucketentries[LED_COUNT];
-double middleFrequencys[LED_COUNT];
-float Maximum[LED_COUNT];
 
 float BucketAmplitude[LED_COUNT];
 float BucketNoise[64] = {284.43 , 714.73 , 667.95 , 579.42 , 451.34 , 416.01 , 268.92 , 228.56 , 200.94 , 168.76 , 133.52 , 128.60 , 132.47 , 176.75 , 157.20 , 177.93 , 124.83 , 102.09 , 111.68 , 94.17 ,
@@ -72,9 +66,6 @@ bool checker[7];
 
 void setup()
 {
-#ifdef __AVR__
-#include <avr/power.h> // Required for 16 MHz Adafruit Trinket
-#endif
 
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, LED_COUNT);
   FastLED.setBrightness(255);
@@ -143,7 +134,6 @@ void setup()
         Bucketentries[n]++;
       }
     }
-    //Bucketentries[n] = Bucketentries[n] * BucketAmplitude[n] / 10;
   }
 
 
@@ -153,8 +143,6 @@ void setup()
   }
 
   /*Multicore Computing*/
-
-
   xTaskCreatePinnedToCore(
     CodeCore0,
     "Sampling_Math_Drawing",
