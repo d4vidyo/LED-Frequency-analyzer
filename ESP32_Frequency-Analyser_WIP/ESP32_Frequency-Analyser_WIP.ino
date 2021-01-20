@@ -82,7 +82,7 @@ void setup()
       BucketAmplitude[i] = 5000;
     }
     else {
-      int difference = (4900 / log(64)) * (log(i + 1) - log(i));
+      int difference = 4880 * log((i + 1) / i) / log(64);
       BucketAmplitude[i] =  BucketAmplitude[i - 1] - difference;
     }
   }
