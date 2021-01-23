@@ -217,7 +217,7 @@ void CodeCore0(void * parameter ) {
 
 
 void CodeCore1(void * parameter ) {
-  // Code needs ~33500us
+  // Code needs ~30850us
   for (;;) {
 
     TimingOld[1] = micros();
@@ -239,8 +239,8 @@ void CodeCore1(void * parameter ) {
       //Compute ~20150us
       FFT.Compute(Real, Imag, samples, FFT_FORWARD);
 
-      //Complex to Magnitude ~5400us
-      FFT.ComplexToMagnitude(Real, Imag, samples);
+      //Complex to Magnitude ~2700us
+      FFT.ComplexToMagnitude(Real, Imag, samples / 2);
 
       Real[0] = 0;
     }
