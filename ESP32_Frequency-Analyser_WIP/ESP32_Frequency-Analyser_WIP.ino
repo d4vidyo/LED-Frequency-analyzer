@@ -30,7 +30,7 @@ volatile double vFFT[samples];
 double Imag[samples];
 
 #define Audio 34
-#define fps 30
+#define fps 30 //Max fps!
 
 /*Input*/
 float u[samples];
@@ -74,7 +74,6 @@ void setup()
   FastLED.setBrightness(255);
 
   Serial.begin(115200);
-  //while (!Serial);
   Serial.println("Ready");
 
 
@@ -194,7 +193,7 @@ void setup()
 
 
 void CodeCore0(void * parameter ) {
-
+  //Code needs ~29800us
   for (;;) {
 
     //waiting for Core 1
@@ -203,13 +202,13 @@ void CodeCore0(void * parameter ) {
     }
     checker[6] = 1;
 
-    //Buckets ~500us
+    //Buckets ~800us
     startbuckets();
 
-    //FastLED ~2600us
+    //FastLED ~2350us
     startdrawing();
 
-    //Build raw data ~26700us
+    //Build raw data ~26600us
     startsampling();
 
     TimingNew[0] = micros();
@@ -218,7 +217,7 @@ void CodeCore0(void * parameter ) {
 
 
 void CodeCore1(void * parameter ) {
-
+  // Code needs ~33500us
   for (;;) {
 
     TimingOld[1] = micros();
@@ -229,13 +228,22 @@ void CodeCore1(void * parameter ) {
       Imag[i] = 0;
     }
 
-    //Performing FFT ~32100us
-    FFT.DCRemoval(Real, samples);
-    FFT.Windowing(Real, samples, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-    FFT.Compute(Real, Imag, samples, FFT_FORWARD);
-    FFT.ComplexToMagnitude(Real, Imag, samples);
-    Real[0] = 0;
+    //Performing FFT ~33400us
+    {
+      //DCRemoval ~700us
+      FFT.DCRemoval(Real, samples);
 
+      //Windowing ~7150us
+      FFT.Windowing(Real, samples, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+
+      //Compute ~20150us
+      FFT.Compute(Real, Imag, samples, FFT_FORWARD);
+
+      //Complex to Magnitude ~5400us
+      FFT.ComplexToMagnitude(Real, Imag, samples);
+
+      Real[0] = 0;
+    }
     //Writing Data to Buffer
     for (uint16_t i = 0; i < samples / 2; i++) {
       vFFT[i] = Real[i];
@@ -245,7 +253,8 @@ void CodeCore1(void * parameter ) {
     TimingNew[1] = micros();
     while (TimingNew[1] - TimingOld[1] < CorePeriod) {
       TimingNew[1] = micros();
-    } checker[6] = 0;
+    }
+    checker[6] = 0;
   }
 }
 
@@ -274,7 +283,7 @@ void startdrawing() {
 
 
   for (uint8_t Position = 0; Position < LED_COUNT; Position++) {
-    
+
     R = Rfix[Position] / 10 * (Buckets[Position] / 11) + Rfix[Position] / 25;
     G = Gfix[Position] / 10 * (Buckets[Position] / 11) + Gfix[Position] / 25;
     B = Bfix[Position] / 10 * (Buckets[Position] / 11) + Bfix[Position] / 25;
