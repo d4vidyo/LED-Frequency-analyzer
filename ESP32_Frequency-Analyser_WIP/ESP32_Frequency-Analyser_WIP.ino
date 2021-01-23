@@ -43,17 +43,20 @@ long oldTime, newTime;
 /*LED stuff*/
 double Buckets[LED_COUNT];
 double BucketsOld[LED_COUNT];
-double BucketsPeak[LED_COUNT];
 float R = 0, G = 0, B = 0;
+int Rfix[LED_COUNT];
+int Gfix[LED_COUNT];
+int Bfix[LED_COUNT];
 int smallestPosition[samples / 2];
-int freque[LED_COUNT];
+int BucketFrequency[LED_COUNT];
 int Bucketentries[LED_COUNT];
+int Basscount = 0;
 
 float BucketAmplitude[LED_COUNT];
-float BucketNoise[64] = {284.43 , 714.73 , 667.95 , 579.42 , 451.34 , 416.01 , 268.92 , 228.56 , 200.94 , 168.76 , 133.52 , 128.60 , 132.47 , 176.75 , 157.20 , 177.93 , 124.83 , 102.09 , 111.68 , 94.17 ,
+/*float BucketNoise[64] = {284.43 , 714.73 , 667.95 , 579.42 , 451.34 , 416.01 , 268.92 , 228.56 , 200.94 , 168.76 , 133.52 , 128.60 , 132.47 , 176.75 , 157.20 , 177.93 , 124.83 , 102.09 , 111.68 , 94.17 ,
                          69.79 , 87.22 , 118.06 , 106.82 , 83.47 , 78.88 , 63.66 , 76.13 , 71.21 , 65.49 , 47.32 , 51.52 , 52.82 , 47.39 , 50.41 , 46.77 , 50.18 , 46.98 , 45.22 , 61.64 , 59.21 , 41.16 ,
                          51.24 , 48.89 , 43.70 , 47.39 , 43.54 , 55.91 , 42.58 , 46.39 , 53.77 , 60.31 , 42.50 , 44.84 , 47.86 , 53.01 , 38.61 , 68.58 , 55.88 , 41.50 , 35.53 , 46.39 , 33.63 , 40.40
-                        };
+                        };*/
 
 
 
@@ -82,28 +85,27 @@ void setup()
       BucketAmplitude[i] = 5000;
     }
     else {
-      int difference = 4880 * log((i + 1) / i) / log(64);
+      int difference = 4930 * log((i + 1) / i) / log(64);
       BucketAmplitude[i] =  BucketAmplitude[i - 1] - difference;
     }
+
   }
-
-
 
   /*Bucket arrangement*/
   int Diff[64];
   int smallest;
+  int startingFrequency = lowestband;
 
-  int delta = 27;
-  int del = 7;
+  int delta = 7;
   for (int i = 0; i < 64; i++) {
 
     if (i == 0) {
-      freque[i] = delta;
+      BucketFrequency[i] = startingFrequency;
     }
     else {
-      freque[i] = freque[i - 1] + delta;
+      BucketFrequency[i] = BucketFrequency[i - 1] + startingFrequency;
     }
-    delta = delta + del;
+    startingFrequency = startingFrequency + delta;
   }
 
   for (uint16_t i = 0; i < samples / 2; i++)
@@ -111,7 +113,7 @@ void setup()
     double abscissa = ((i * 1.0 * samplingFrequency) / samples);
 
     for (int j = 0; j < 64; j++) {
-      Diff[j] = abscissa - freque[j];
+      Diff[j] = abscissa - BucketFrequency[j];
 
       if (Diff[j] < 0) {
         Diff[j] = -Diff[j];
@@ -126,7 +128,6 @@ void setup()
 
       }
     }
-
   }
   for (int n = 0; n < LED_COUNT; n++) {
     for (int i = 0; i < samples / 2; i++) {
@@ -138,9 +139,36 @@ void setup()
 
 
 
-  for (int i = 0; i < LED_COUNT; i++) {
-    BucketsPeak[i] = 0;
+  /*LED coloring*/
+  int quarter = BucketFrequency[63] / 4;
+  int sub[3];
+  for (int i = 0; i < 64; i++) {
+    if (BucketFrequency[i] < quarter) {
+      Rfix[i] = 255;
+      Gfix[i] = 255 * BucketFrequency[i] / quarter;
+      Bfix[i] = 0;
+      sub[0] = BucketFrequency[i];
+    }
+    if (BucketFrequency[i] < 2 * quarter && BucketFrequency[i] > quarter) {
+      Rfix[i] = 255 - 255 * (BucketFrequency[i] - sub[0]) / quarter;
+      Gfix[i] = 255;
+      Bfix[i] = 0;
+      sub[1] = BucketFrequency[i];
+    }
+    if (BucketFrequency[i] < 3 * quarter && BucketFrequency[i] > 2 * quarter) {
+      Rfix[i] = 0;
+      Gfix[i] = 255;
+      Bfix[i] = 255 * (BucketFrequency[i] - sub[1]) / quarter;
+      sub[2] = BucketFrequency[i];
+    }
+    if (BucketFrequency[i] < 4 * quarter && BucketFrequency[i] > 3 * quarter) {
+      Rfix[i] = 0;
+      Gfix[i] = 255 - 225 * (BucketFrequency[i] - sub[2]) / quarter;
+      Bfix[i] = 255;
+    }
   }
+
+
 
   /*Multicore Computing*/
   xTaskCreatePinnedToCore(
@@ -243,39 +271,14 @@ void startsampling() {
 }
 
 void startdrawing() {
+
+
   for (uint8_t Position = 0; Position < LED_COUNT; Position++) {
+    
+    R = Rfix[Position] / 10 * (Buckets[Position] / 11) + Rfix[Position] / 25;
+    G = Gfix[Position] / 10 * (Buckets[Position] / 11) + Gfix[Position] / 25;
+    B = Bfix[Position] / 10 * (Buckets[Position] / 11) + Bfix[Position] / 25;
 
-    if (Position < 26) {
-      R = 255;
-      G = Position * 100 / 26;
-      B = 0;
-    }
-    if (Position >= 26 && Position < 33) {
-      R = 255;
-      G = 100 + (Position - 26) * ((255 - 100) / (33 - 26));
-      B = 0;
-    }
-    if (Position >= 33 && Position < 48) {
-      R = 255 - (Position - 33) * (255 / (48 - 33));
-      G = 255;
-      B = 0;
-    }
-    if (Position >= 48 && Position < 56) {
-      R = 0;
-      G = 255;
-      B = (Position - 48) * (255 / (56 - 48));
-    }
-    if (Position >= 56 && Position < 64) {
-      R = 0;
-      G = 255 - (Position - 56) * (255 / (64 - 56));
-      B = 255;
-    }
-
-
-
-    R = R / 10 * (Buckets[Position] / 11) + R / 25;
-    G = G / 10 * (Buckets[Position] / 11) + G / 25;
-    B = B / 10 * (Buckets[Position] / 11) + B / 25;
     if (R > 255) {
       R = 255;
     }
@@ -286,25 +289,25 @@ void startdrawing() {
       B = 255;
     }
 
+
     leds[LED_COUNT - 1 - Position] = CRGB(R, G, B);
 
   }
 
   FastLED.show();
+
 }
 
 void startbuckets() {
 
-  //Buckets resetten
+  //reseting Buckets
   for (int i = 0; i < LED_COUNT; i++) {
     Buckets[i] = 0;
   }
-  //Buckets Füllen
+  //filling buckets
   for (int n = 0; n < samples / 2; n++) {
     Buckets[smallestPosition[n]] += vFFT[n];
   }
-
-
 
   //normalising Buckets
   for (int i = 0; i < LED_COUNT; i++) {
@@ -318,22 +321,32 @@ void startbuckets() {
   }
 
 
-
-  for ( int i = 0; i < LED_COUNT - 1 ; i++) {
+  /*
+    for ( int i = 0; i < LED_COUNT - 1 ; i++) {
     if (Buckets[i] < Buckets[i + 1]) {
       Buckets[i] = (Buckets[i] + Buckets[i + 1]) / 2;
     }
-  }
-  for ( int i = LED_COUNT; i > 0 ; i--) {
+    }
+    for ( int i = LED_COUNT; i > 0 ; i--) {
     if (Buckets[i] < Buckets[i - 1]) {
       Buckets[i] = (Buckets[i] + Buckets[i - 1]) / 2;
     }
-  }
-
+    }
+  */
   for ( int i = 0; i < LED_COUNT; i++) {
     if (Buckets[i] < BucketsOld[i]) {
       Buckets[i] = (Buckets[i] + 2 * BucketsOld[i]) / 3;
     }
+  }
+  bool reset = true;
+  for (uint16_t i = 0; i < 4; i++) {
+    if (Buckets[i] > 90) {
+      Basscount++;
+      reset = false;
+    }
+  }
+  if (reset) {
+    Basscount = 0;
   }
 }
 
