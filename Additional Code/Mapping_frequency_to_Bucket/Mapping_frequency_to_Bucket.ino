@@ -5,7 +5,7 @@ void setup() {
 }
 
 void loop() {
-  /*
+  /* OLD function
     int BucketFrequency[64];
     int startingFrequency = 20;
     int delta = 7;
