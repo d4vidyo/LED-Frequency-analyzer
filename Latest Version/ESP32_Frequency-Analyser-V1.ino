@@ -78,21 +78,6 @@ float BucketFFTamplitude[samples / 2] =
   195.54
 };
 
-/*float BucketAmplitude[LED_COUNT] = {6021.28, 6021.28, 5350.83, 4720.76, 4164.83, 3702.91, 3336.08, 3048.91,
-                                    2818.86, 2626.81, 2461.88, 2318.82, 2192.6, 2075.32, 1957.44, 1831.19,
-                                    1693.33, 1545.88, 1394.95, 1248.68, 1115.16, 1000.76, 908.93, 839.61,
-                                    789.76, 754.68, 729.84, 712.02, 699.31, 690.18, 682.77, 674.82, 664.35,
-                                    650.2, 632.08, 610.18, 584.9, 556.88, 527.35, 498.25, 471.98, 450.6,
-                                    434.95, 424.09, 415.55, 406.22, 393.73, 377.3, 358.08, 338.48, 321.24,
-                                    308.32, 300.23, 295.87, 292.92, 288.6, 280.5, 267.15, 248.11, 223.72,
-                                    194.66, 161.74, 125.96, 88.61
-                                   };*/
-
-/*float BucketNoise[64] = {284.43 , 714.73 , 667.95 , 579.42 , 451.34 , 416.01 , 268.92 , 228.56 , 200.94 , 168.76 , 133.52 , 128.60 , 132.47 , 176.75 , 157.20 , 177.93 , 124.83 , 102.09 , 111.68 , 94.17 ,
-                         69.79 , 87.22 , 118.06 , 106.82 , 83.47 , 78.88 , 63.66 , 76.13 , 71.21 , 65.49 , 47.32 , 51.52 , 52.82 , 47.39 , 50.41 , 46.77 , 50.18 , 46.98 , 45.22 , 61.64 , 59.21 , 41.16 ,
-                         51.24 , 48.89 , 43.70 , 47.39 , 43.54 , 55.91 , 42.58 , 46.39 , 53.77 , 60.31 , 42.50 , 44.84 , 47.86 , 53.01 , 38.61 , 68.58 , 55.88 , 41.50 , 35.53 , 46.39 , 33.63 , 40.40
-                        };*/
-
 
 /*LED stuff*/                         //Stores the fixed color for each LED
 int Rfix[LED_COUNT];
@@ -277,10 +262,6 @@ void startbuckets() {
   for (int i = 0; i < LED_COUNT; i++) {
 
     Buckets[i] = Buckets[i] / Bucketentries[i];
-    //Buckets[i] = 100 * Buckets[i] / BucketAmplitude[i];
-    /*if (Buckets[i] > 10) {
-      Buckets[i] = 100 * (log10(Buckets[i]) - 1);
-      }*/
 
     if (Buckets[i] > 100) {
       Buckets[i] = 100;
@@ -298,7 +279,6 @@ void startbuckets() {
       if (Buckets[i] > 100) {
         Buckets[i] = 100;
       }
-      //Buckets[i] = 100 * (log10(Buckets[i]) - 1);
       Buckets[i + 1] /= 2;
     }
   }
@@ -347,23 +327,6 @@ void BucketFrequencyFunction() {
 
   for (int i = 1; i <= LED_COUNT; i++) {
     BucketFrequency[i - 1] = (a * pow(i, 5)) + (b * pow(i, 4)) + (c * pow(i, 3)) + (d * pow(i, 2)) + (e * i) + f;
-  }
-}
-
-void BucketFrequencyManual() {
-
-  int startingFrequency = lowestband;
-  int delta = 7;
-
-  for (int i = 0; i < LED_COUNT; i++) {
-
-    if (i == 0) {
-      BucketFrequency[i] = startingFrequency;
-    }
-    else {
-      BucketFrequency[i] = BucketFrequency[i - 1] + startingFrequency;
-    }
-    startingFrequency = startingFrequency + delta;
   }
 }
 
