@@ -21,11 +21,15 @@ void loop() {
     }*/
 #define Zeile 6
 #define Spalte 7
+  int aa = 33*4;
+  int bb = 52*4;
+  int cc = 59*4;
+  int dd = 64*4;
   double Matrix[Zeile][Spalte] = { {1, 1, 1, 1, 1, 1, 39},
-    {pow(59, 5), pow(59, 4), pow(59, 3), pow(59, 2), 59, 1, 12000},
-    {pow(33, 5), pow(33, 4),  pow(33, 3), pow(33, 2), 33, 1,  4000},
-    {pow(50, 5), pow(50, 4), pow(50, 3), pow(50, 2), 50, 1,  8000},
-    {pow(64, 5), pow(64, 4), pow(64, 3), pow(64, 2), 64, 1, 16000},
+    {pow(cc, 5), pow(cc, 4), pow(cc, 3), pow(cc, 2), cc, 1, 12000},
+    {pow(aa, 5), pow(aa, 4), pow(aa, 3), pow(aa, 2), aa, 1,  4000},
+    {pow(bb, 5), pow(bb, 4), pow(bb, 3), pow(bb, 2), bb, 1,  8000},
+    {pow(dd, 5), pow(dd, 4), pow(dd, 3), pow(dd, 2), dd, 1, 16000},
     {80, 32, 12, 4, 1, 0, 39}
   };
   double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0;
@@ -52,16 +56,26 @@ void loop() {
   a = (Matrix[0][6] - Matrix[0][5] * f - Matrix[0][4] * e - Matrix[0][3] * d - Matrix[0][2] * c - Matrix[0][1] * b) / Matrix[0][0];
 
   for (int i = 1; i <= 64; i++) {
-    BucketFrequency[i-1] = (a * pow(i, 5)) + (b * pow(i, 4)) + (c * pow(i, 3)) + (d * pow(i, 2)) + (e * i) + f;
+    BucketFrequency[i - 1] = (a * pow(i, 5)) + (b * pow(i, 4)) + (c * pow(i, 3)) + (d * pow(i, 2)) + (e * i) + f;
   }
-
+  Serial.print(a, 9);
+  Serial.print("*x^5+");
+  Serial.print(b, 9);
+  Serial.print("*x^4+");
+  Serial.print(c, 9);
+  Serial.print("*x^3+");
+  Serial.print(d, 9);
+  Serial.print("*x^2+");
+  Serial.print(e, 9);
+  Serial.print("*x+");
+  Serial.println(f, 9);
   for (int i = 0; i < 64; i++) {
-    Serial.print("Bucket ");
-    Serial.print(i);
-    Serial.print(" = ");
-    Serial.print(BucketFrequency[i]);
-    Serial.print("hz");
-    Serial.println(" , ");
+    //Serial.print("Bucket ");
+    //Serial.print(i);
+    //Serial.print(" = ");
+    //Serial.print(BucketFrequency[i]);
+    //Serial.print("hz");
+    //Serial.println(" , ");
   }
 
   int Diff[64];
@@ -83,11 +97,11 @@ void loop() {
         smallest = Diff[j];
         smallestPosition[i] = j;
       }
-    }
+    }/*
     Serial.print("Nr: ");
     Serial.print(i);
     Serial.print(" smallestPosition: ");
-    Serial.println(smallestPosition[i]);
+    Serial.println(smallestPosition[i]);*/
   }
 
 
@@ -134,6 +148,6 @@ void loop() {
     }
   }
 
-  delay(10000);
+  delay(5000);
 
 }

@@ -6,9 +6,11 @@ arduinoFFT FFT = arduinoFFT(); /* Create FFT object */
 
 //Neopixel
 #include <FastLED.h>
-#define LED_COUNT 64
+#define LED_COUNT 60
 #define LED_PIN 2
+#define Mirrorcount 2
 CRGB leds[LED_COUNT];
+int Individuals = LED_COUNT / Mirrorcount;
 
 //Audio
 #define Audio 34                      //Pin used to sample Audio
@@ -223,7 +225,7 @@ void startsampling() {
     vReal[i] = int8_t((amplitude * u / 4096) / 2.0);
 
     vRealBuffer[i] = vReal[i];
-    if (i < LED_COUNT) {
+    if (i < Individuals) {
       BucketsOld[i] = Buckets[i];
     }
 
@@ -237,27 +239,56 @@ void startsampling() {
 void startdrawing() {
 
   float R = 0, G = 0, B = 0;
+  for (uint8_t i = 0; i < Mirrorcount; i++) {
+    for (uint8_t Position = i * Individuals; Position < ((i + 1) * Individuals); Position++) {
+      int Set = Position - i * Individuals;
+      R = Rfix[Set] / 10 * (Buckets[Set] / 11) + Rfix[Set] / 25;
+      G = Gfix[Set] / 10 * (Buckets[Set] / 11) + Gfix[Set] / 25;
+      B = Bfix[Set] / 10 * (Buckets[Set] / 11) + Bfix[Set] / 25;
 
-  for (uint8_t Position = 0; Position < LED_COUNT; Position++) {
 
-    R = Rfix[Position] / 10 * (Buckets[Position] / 11) + Rfix[Position] / 25;
-    G = Gfix[Position] / 10 * (Buckets[Position] / 11) + Gfix[Position] / 25;
-    B = Bfix[Position] / 10 * (Buckets[Position] / 11) + Bfix[Position] / 25;
-
-
-
-    if (R > 255) {
-      R = 255;
+      if (R > 255) {
+        R = 255;
+      }
+      if (G > 255) {
+        G = 255;
+      }
+      if (B > 255) {
+        B = 255;
+      }
+      if (i % 2 == 0) {
+        leds[(i + 1)*Individuals - (Position - (i * Individuals)) - 1] = CRGB(R, G, B);
+      } else {
+        leds[Position ] = CRGB(R, G, B);
+      }
     }
-    if (G > 255) {
-      G = 255;
-    }
-    if (B > 255) {
-      B = 255;
-    }
-
-    leds[Position] = CRGB(R, G, B);
   }
+
+  /*
+    for (uint8_t Position = 0; Position < LED_COUNT; Position++) {
+      if (Position <= Individuals - 1) {
+        R = Rfix[LED_COUNT / 2 - 1 - Position] / 10 * (Buckets[LED_COUNT / 2 - 1 - Position] / 11) + Rfix[LED_COUNT / 2 - 1 - Position] / 25;
+        G = Gfix[LED_COUNT / 2 - 1 - Position] / 10 * (Buckets[LED_COUNT / 2 - 1 - Position] / 11) + Gfix[LED_COUNT / 2 - 1 - Position] / 25;
+        B = Bfix[LED_COUNT / 2 - 1 - Position] / 10 * (Buckets[LED_COUNT / 2 - 1 - Position] / 11) + Bfix[LED_COUNT / 2 - 1 - Position] / 25;
+      }
+      else {
+        R = Rfix[Position - LED_COUNT / 2] / 10 * (Buckets[Position - LED_COUNT / 2] / 11) + Rfix[Position - LED_COUNT / 2] / 25;
+        G = Gfix[Position - LED_COUNT / 2] / 10 * (Buckets[Position - LED_COUNT / 2] / 11) + Gfix[Position - LED_COUNT / 2] / 25;
+        B = Bfix[Position - LED_COUNT / 2] / 10 * (Buckets[Position - LED_COUNT / 2] / 11) + Bfix[Position - LED_COUNT / 2] / 25;
+
+      }
+      if (R > 255) {
+        R = 255;
+      }
+      if (G > 255) {
+        G = 255;
+      }
+      if (B > 255) {
+        B = 255;
+      }
+      leds[Position] = CRGB(R, G, B);
+
+    }*/
 
   FastLED.show();
 }
@@ -265,7 +296,7 @@ void startdrawing() {
 void startbuckets() {
 
   //reseting Buckets
-  for (int i = 0; i < LED_COUNT; i++) {
+  for (int i = 0; i < Individuals; i++) {
     Buckets[i] = 0;
   }
   //filling buckets
@@ -274,7 +305,7 @@ void startbuckets() {
   }
 
   //normalising Buckets
-  for (int i = 0; i < LED_COUNT; i++) {
+  for (int i = 0; i < Individuals; i++) {
 
     Buckets[i] = Buckets[i] / Bucketentries[i];
     //Buckets[i] = 100 * Buckets[i] / BucketAmplitude[i];
@@ -287,8 +318,8 @@ void startbuckets() {
     }
   }
 
-  double Bucketsbuffer[LED_COUNT];
-  for (int i = 0; i < LED_COUNT; i++) {
+  double Bucketsbuffer[Individuals];
+  for (int i = 0; i < Individuals; i++) {
     Bucketsbuffer[i] = Buckets[i];
   }
   for (int i = LED_COUNT / 2; i < LED_COUNT - 1; i++) {
@@ -303,7 +334,7 @@ void startbuckets() {
     }
   }
 
-  for (int i = 0; i < LED_COUNT; i++) {
+  for (int i = 0; i < Individuals; i++) {
     if (Buckets[i] < BucketsOld[i]) {
       Buckets[i] = (Buckets[i] + 2 * BucketsOld[i]) / 3;
     }
@@ -311,19 +342,39 @@ void startbuckets() {
 }
 
 void BucketFrequencyFunction() {
+  int Fick, Dich;
+  if (Individuals < 25) {
+    Fick = 2;
+    Dich = 78;
+  }
+  else {
+    Fick = Individuals * 0.9;
+    Dich = 12000;
+  }
+  int MP[][2] = {{1, 39}, {Individuals / 2, 4000}, {Individuals * 0.75, 8000}, {Fick, Dich}, {Individuals, 16000}};
+  int MA[][2] = {{2, 39}};
+  int Zeile = (sizeof MP / sizeof MP[0]) + (sizeof MA / sizeof MA[0]);
+  int Spalte = Zeile + 1;
 
-#define Zeile 6
-#define Spalte 7
-  double Matrix[Zeile][Spalte] = { {1, 1, 1, 1, 1, 1, 39},
-    {pow(59, 5), pow(59, 4), pow(59, 3), pow(59, 2), 59, 1, 12000},
-    {pow(33, 5), pow(33, 4),  pow(33, 3), pow(33, 2), 33, 1,  4000},
-    {pow(50, 5), pow(50, 4), pow(50, 3), pow(50, 2), 50, 1,  8000},
-    {pow(64, 5), pow(64, 4), pow(64, 3), pow(64, 2), 64, 1, 16000},
-    {80, 32, 12, 4, 1, 0, 39}
-  };
-  double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0;
-  float x = 0;
+  //Building Matrix
+  double Matrix[Zeile][Spalte];
+  for (uint8_t i = 0; i < Zeile; i++) {
+    if (i < (sizeof MP / sizeof MP[0])) {
+      for (uint8_t j = 0; j < Spalte - 1; j++) {
+        Matrix[i][j] = pow(MP[i][0], Spalte - 2 - j);
+      }
+      Matrix[i][Spalte - 1] = MP[i][1];
+    }
+    else {
+      for (uint8_t j = 0; j < Spalte - 1; j++) {
+        Matrix[i][j] = (Spalte - 2 - j) * pow(MA[i - (sizeof MP / sizeof MP[0])][0] , Spalte - 3 - j);
+      }
+      Matrix[i][Spalte - 1] = MA[i - (sizeof MP / sizeof MP[0])][1];
+    }
+  }
 
+  //Forming Triangle Matrix
+  double a = 0;
   for (int k = 0; k < Zeile; k++) {
     for (int j = k + 1; j < Zeile; j++) {
       a = Matrix[j][k] / Matrix[k][k];
@@ -338,25 +389,41 @@ void BucketFrequencyFunction() {
     }
   }
 
-  f = Matrix[5][6] / Matrix[5][5];
-  e = (Matrix[4][6] - Matrix[4][5] * f) / Matrix[4][4];
-  d = (Matrix[3][6] - Matrix[3][5] * f - Matrix[3][4] * e ) / Matrix[3][3];
-  c = (Matrix[2][6] - Matrix[2][5] * f - Matrix[2][4] * e - Matrix[2][3] * d) / Matrix[2][2];
-  b = (Matrix[1][6] - Matrix[1][5] * f - Matrix[1][4] * e - Matrix[1][3] * d - Matrix[1][2] * c) / Matrix[1][1];
-  a = (Matrix[0][6] - Matrix[0][5] * f - Matrix[0][4] * e - Matrix[0][3] * d - Matrix[0][2] * c - Matrix[0][1] * b) / Matrix[0][0];
+  //Calculating Variables
+  double Var[Zeile];
+  for (int i = Zeile - 1; i >= 0; i--) {
+    Var[i] = Matrix[i][Spalte - 1];
+  }
 
-  for (int i = 1; i <= LED_COUNT; i++) {
-    BucketFrequency[i - 1] = (a * pow(i, 5)) + (b * pow(i, 4)) + (c * pow(i, 3)) + (d * pow(i, 2)) + (e * i) + f;
+  for (int k = Zeile - 1; k >= 0 ; k--) {
+    for (int i = Spalte - 2 ; i > k; i--) {
+      Var[k] -= Matrix[k][i] * Var[i];
+    }
+    Var[k] /= Matrix[k][k];
+  }
+  for (int i = 0; i < Zeile; i++) {
+    Serial.print(Var[i], 9);
+    Serial.print("*x^");
+    Serial.print(Zeile - 1 - i);
+    Serial.print("+");
+  }
+
+  //applying cumputed Formula
+  for (int i = 0; i <= Individuals; i++) {
+    BucketFrequency[i - 1] = Var[0] * pow(i, Zeile - 1);
+  }
+  for (int i = 1; i <= Individuals; i++) {
+    for (int j = 1; j < Zeile; j++) {
+      BucketFrequency[i - 1] += Var[j] * pow(i, Zeile - 1 - j);
+    }
   }
 }
 
-void BucketFrequencyManual() {
 
+void BucketFrequencyManual() {
   int startingFrequency = lowestband;
   int delta = 7;
-
   for (int i = 0; i < LED_COUNT; i++) {
-
     if (i == 0) {
       BucketFrequency[i] = startingFrequency;
     }
@@ -367,14 +434,15 @@ void BucketFrequencyManual() {
   }
 }
 
+
 void vRealtoBucket() {
 
   for (uint16_t i = 0; i < samples / 2; i++) {
 
-    int Diff[LED_COUNT];
+    int Diff[Individuals];
     int smallest;
     double abscissa = ((i * 1.0 * samplingFrequency) / samples);
-    for (int j = 0; j < LED_COUNT; j++) {
+    for (int j = 0; j < Individuals; j++) {
       Diff[j] = abscissa - BucketFrequency[j];
 
       if (Diff[j] < 0) {
@@ -392,7 +460,7 @@ void vRealtoBucket() {
     }
   }
 
-  for (int n = 0; n < LED_COUNT; n++) {
+  for (int n = 0; n < Individuals; n++) {
     for (int i = 0; i < samples / 2; i++) {
       if (smallestPosition[i] == n) {
         Bucketentries[n]++;
@@ -403,9 +471,12 @@ void vRealtoBucket() {
 
 void LEDColor() {
 
-  int quarter = BucketFrequency[LED_COUNT - 1] / 4;
+  int quarter = BucketFrequency[Individuals - 1] / 4;
   int sub[3];
-  for (int i = 0; i < LED_COUNT; i++) {
+  float v = 0;
+  float x = 0;
+
+  for (int i = 0; i < Individuals; i++) {
     if (BucketFrequency[i] <= quarter) {
       Rfix[i] = 255;
       Gfix[i] = 255 * BucketFrequency[i] / quarter;
@@ -428,6 +499,7 @@ void LEDColor() {
       Rfix[i] = 0;
       Gfix[i] = 255 - 255 * (BucketFrequency[i] - sub[2]) / quarter;
       Bfix[i] = 255;
+      x = float(Gfix[i]) / float(Bfix[i]);
     }
     if (Rfix[i] < 0) {
       Rfix[i] = 0;
